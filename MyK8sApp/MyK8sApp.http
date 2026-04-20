@@ -1,0 +1,6 @@
+@MyK8sApp_HostAddress = http://localhost:5090
+
+GET {{MyK8sApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
