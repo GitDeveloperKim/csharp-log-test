@@ -1,0 +1,49 @@
+## [ .NET Core ]
+bin/
+obj/
+out/
+publish/
+
+# .NET 전용 캐시 및 임시 파일
+.lock
+.hash
+.sentinel
+*.tmp
+
+## [ Visual Studio Code ]
+.vscode/
+# .vscode 내부에 개인 설정을 유지하고 싶다면 아래 주석을 해제하세요.
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+.history/
+*.code-workspace
+
+## [ 환경 변수 및 비밀 정보 (중요) ]
+# 로컬 개발 시 사용하는 비밀 설정 파일
+appsettings.Development.json
+appsettings.Local.json
+*.user
+*.userosscfg
+*.suo
+*.userprefs
+
+# 시크릿 저장소 (dotnet user-secrets)
+secrets.json
+
+## [ Docker & Kubernetes ]
+# Docker 관련 임시 파일
+.dockerignore
+# K8s 헬름 차트 관련 패키지 파일 (사용 예정이라면)
+charts/*.tgz
+charts/charts/
+
+## [ OS 관련 ]
+.DS_Store
+Thumbs.db
+
+## [ 기타 ]
+# 로그 파일 (로컬 테스트 시 생성될 수 있음)
+*.log
+logs/
