@@ -1,13 +1,26 @@
+using Serilog;
+using Serilog.Formatting.Json;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// 1. Serilog 설정: 콘솔에 JSON 형식으로 로그를 출력하도록 설정
+// 이렇게 설정해야 EFK의 Fluent Bit이 로그를 필드별(Level, Message, Exception 등)로 파싱할 수 있습니다.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console(new JsonFormatter()) // JSON 포맷터 적용
+    .Enrich.FromLogContext()              // 로그에 컨텍스트 정보 추가
+    .CreateLogger();
+
+// 2. 기본 로거 대신 Serilog를 사용하도록 설정
+builder.Host.UseSerilog();
+
+// --- 기존 서비스 설정 코드 ---
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --- 미들웨어 설정 코드 ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -15,30 +28,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+// 3. 앱 시작 시 테스트 로그 작성
+Log.Information("ASP.NET Core Server가 시작되었습니다. EFK 수집 테스트 로그입니다.");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
