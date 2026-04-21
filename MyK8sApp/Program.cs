@@ -63,8 +63,19 @@ app.MapControllers();
 // 3. 앱 시작 시 테스트 로그 작성
 Log.Information("ASP.NET Core Server가 시작되었습니다. EFK 수집 테스트 로그입니다.");
 
-app.MapGet("/test-api", () => new { 
-    message = "Minimal API 호출 성공!", 
-    timestamp = DateTime.Now 
+// 테스트용 엔드포인트: 사용자가 직접 로그 메시지를 남기는 시나리오
+app.MapGet("/test-api", () => 
+{
+    // 1. 비즈니스 로직 수행 (예시)
+    var responseMessage = "Minimal API 호출 성공!";
+    
+    // 2. 사용자 정의 로그 기록 (이 메시지가 JSON의 "message" 필드로 들어갑니다)
+    // 요구하신 포맷의 "message":"user written log" 부분을 구현한 것입니다.
+    Log.Information("user written log: 데이터를 성공적으로 조회했습니다.");
+
+    return Results.Ok(new { 
+        message = responseMessage, 
+        timestamp = DateTime.UtcNow // K8s 환경에서는 UTC 사용을 권장합니다.
+    });
 });
 app.Run();
