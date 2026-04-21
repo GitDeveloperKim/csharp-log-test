@@ -2,6 +2,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Formatting.Json;
+using Serilog.Context; // 추가 필요
 using System.Diagnostics;
 using Serilog.Templates; // 상단에 추가
 
@@ -30,31 +31,31 @@ var app = builder.Build();
 app.Use(async (context, next) =>
 {
     var sw = Stopwatch.StartNew();
-    // .NET 8의 기본 추적 ID 추출
     var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
     var spanId = Activity.Current?.SpanId.ToString() ?? "";
 
-    try
+    // LogContext를 사용하여 이 블록 안에서 발생하는 모든 로그에 속성을 강제로 주입합니다.
+    using (LogContext.PushProperty("trace_id", traceId))
+    using (LogContext.PushProperty("span_id", spanId))
+    using (LogContext.PushProperty("method", context.Request.Method))
+    using (LogContext.PushProperty("path", context.Request.Path))
+    using (LogContext.PushProperty("user_id", "ys88sem.kim"))
     {
-        await next();
-        sw.Stop();
-        
-        // 필드명을 템플릿과 일치시킵니다.
-        Log.Information("{method} {path} 완료. status_code: {status_code}, duration_ms: {duration_ms}, user_id: {user_id}, trace_id: {trace_id}, span_id: {span_id}",
-            context.Request.Method,
-            context.Request.Path,
-            context.Response.StatusCode,
-            sw.ElapsedMilliseconds,
-            "ys88sem.kim",
-            traceId,
-            spanId);
-    }
-    catch (Exception ex)
-    {
-        sw.Stop();
-        Log.Error(ex, "오류 발생. method: {method}, path: {path}, trace_id: {trace_id}", 
-            context.Request.Method, context.Request.Path, traceId);
-        throw;
+        try
+        {
+            await next(); // 여기서 API 로직(MapGet 등)이 실행됩니다.
+            sw.Stop();
+            
+            // 1. 인프라 로그 (요청 처리 완료 로그)
+            Log.Information("{method} {path} 완료. status_code: {status_code}, duration_ms: {duration_ms}",
+                context.Request.Method, context.Request.Path, context.Response.StatusCode, sw.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            Log.Error(ex, "오류 발생. status_code: 500");
+            throw;
+        }
     }
 });
 
