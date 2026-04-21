@@ -63,5 +63,8 @@ app.MapControllers();
 // 3. 앱 시작 시 테스트 로그 작성
 Log.Information("ASP.NET Core Server가 시작되었습니다. EFK 수집 테스트 로그입니다.");
 
-app.MapGet("/test", () => "로그 수집 테스트 완료!");
+app.MapGet("/test-api", () => new { 
+    message = "Minimal API 호출 성공!", 
+    timestamp = DateTime.Now 
+});
 app.Run();
