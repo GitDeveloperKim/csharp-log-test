@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csharp-log-api
+  labels:
+    app: csharp-log-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csharp-log-api
+  template:
+    metadata:
+      labels:
+        app: csharp-log-api
+    spec:
+      containers:
+      - name: csharp-log-api
+        image: csharp-log-api:1.2.3  # 로컬 테스트 시 imagePullPolicy 확인 필요
+        imagePullPolicy: IfNotPresent 
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: csharp-log-api-service
+spec:
+  type: NodePort # 로컬 테스트용 (운영은 LoadBalancer나 Ingress)
+  selector:
+    app: csharp-log-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      nodePort: 30080

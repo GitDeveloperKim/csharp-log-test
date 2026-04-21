@@ -1,0 +1,25 @@
+# 1. 빌드 스테이지
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# 프로젝트 파일(.csproj)을 먼저 복사해서 라이브러리 설치(Restore)
+COPY ["MyK8sApp.csproj", "./"]
+RUN dotnet restore
+
+# 나머지 모든 소스 코드를 복사하고 빌드
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+# 2. 실행 스테이지
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+
+# 빌드 스테이지에서 만들어진 결과물만 가져오기
+COPY --from=build /app/publish .
+
+# K8s 내부에서 사용할 포트 설정
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+# 앱 실행
+ENTRYPOINT ["dotnet", "MyK8sApp.dll"]
